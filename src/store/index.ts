@@ -3,6 +3,9 @@
  * Add slices/stores here and export typed hooks from dedicated files.
  */
 
+export { useSettingsStore } from './settingsStore';
+export type { SettingsStore } from './settingsStore';
+
 export type AppState = {
   /** Extend when you introduce global state. */
   version: number;

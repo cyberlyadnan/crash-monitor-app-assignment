@@ -1,126 +1,169 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Button,
+  Card,
+  Divider,
+  List,
+  Switch,
+  Text,
+  useTheme,
+} from 'react-native-paper';
 
 import { ScreenContainer } from '@/components';
-import { APP_NAME, colors, spacing } from '@/constants';
+import { APP_NAME, spacing } from '@/constants';
 import type { AppStackScreenProps } from '@/navigation';
+import { useSettingsStore } from '@/store/settingsStore';
 import { crashApp, crashAsync } from '@/utils/crashUtils';
 
 type Props = AppStackScreenProps<'SettingsScreen'>;
 
-export function SettingsScreen({ navigation }: Props) {
+export function SettingsScreen(_props: Props) {
+  const theme = useTheme();
+  const notificationsEnabled = useSettingsStore((s) => s.notificationsEnabled);
+  const setNotificationsEnabled = useSettingsStore((s) => s.setNotificationsEnabled);
+
   return (
-    <ScreenContainer style={styles.container}>
-      <Text style={styles.title}>{APP_NAME}</Text>
-      <Text style={styles.body}>Navigation is typed via AppStackParamList.</Text>
+    <ScreenContainer style={styles.screenRoot}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <Text variant="headlineMedium" style={styles.headerTitle}>
+            Settings
+          </Text>
+          <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
+            Preferences and tools for {APP_NAME}.
+          </Text>
+        </View>
 
-      <View style={styles.actions}>
-        <Pressable
-          onPress={() => navigation.navigate('FlatListScreen')}
-          style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-        >
-          <Text style={styles.buttonLabel}>Open flat list</Text>
-        </Pressable>
-        <Pressable
-          onPress={() => navigation.navigate('LegendListScreen')}
-          style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-        >
-          <Text style={styles.buttonLabel}>Open legend list</Text>
-        </Pressable>
-      </View>
+        <List.Section style={styles.section}>
+          <List.Subheader style={styles.subheader}>App settings</List.Subheader>
+          <Card mode="outlined" style={styles.card}>
+            <List.Item
+              title="Push notifications"
+              description="Allow alerts and updates from the app when important events occur. You can change this anytime."
+              titleNumberOfLines={2}
+              descriptionNumberOfLines={4}
+              left={(props) => <List.Icon {...props} icon="bell-outline" />}
+              right={() => (
+                <Switch
+                  value={notificationsEnabled}
+                  onValueChange={setNotificationsEnabled}
+                  accessibilityLabel="Push notifications"
+                />
+              )}
+            />
+          </Card>
+        </List.Section>
 
-      <Text style={styles.sectionLabel}>Sentry diagnostics</Text>
-      <Text style={styles.sectionHint}>
-        Triggers a JS exception and an unhandled rejection so you can confirm events in Sentry (valid DSN
-        required).
-      </Text>
-      <View style={styles.dangerActions}>
-        <Pressable
-          onPress={() => crashApp()}
-          style={({ pressed }) => [styles.dangerButton, pressed && styles.dangerButtonPressed]}
-        >
-          <Text style={styles.dangerButtonLabel}>Throw sync error</Text>
-        </Pressable>
-        <Pressable
-          onPress={() => crashAsync()}
-          style={({ pressed }) => [styles.dangerButton, pressed && styles.dangerButtonPressed]}
-        >
-          <Text style={styles.dangerButtonLabel}>Unhandled rejection</Text>
-        </Pressable>
-      </View>
+        <Divider style={styles.divider} />
+
+        <List.Section style={styles.section}>
+          <List.Subheader style={styles.subheader}>Diagnostics</List.Subheader>
+          <Text variant="bodySmall" style={[styles.sectionIntro, { color: theme.colors.onSurfaceVariant }]}>
+            Use these actions to verify crash reporting (for example Sentry). Only use on test devices.
+          </Text>
+          <Card mode="outlined" style={styles.card}>
+            <Card.Content style={styles.diagnosticsContent}>
+              <View style={styles.diagnosticBlock}>
+                <Button
+                  mode="contained-tonal"
+                  buttonColor={theme.colors.errorContainer}
+                  textColor={theme.colors.onErrorContainer}
+                  onPress={() => crashApp()}
+                  style={styles.actionButton}
+                  contentStyle={styles.actionButtonContent}
+                >
+                  Trigger Crash
+                </Button>
+                <Text variant="bodySmall" style={[styles.helper, { color: theme.colors.onSurfaceVariant }]}>
+                  Throws a synchronous JavaScript error immediately. Useful to confirm your error pipeline captures
+                  stack traces.
+                </Text>
+              </View>
+              <View style={styles.diagnosticBlock}>
+                <Button
+                  mode="contained-tonal"
+                  buttonColor={theme.colors.errorContainer}
+                  textColor={theme.colors.onErrorContainer}
+                  onPress={() => crashAsync()}
+                  style={styles.actionButton}
+                  contentStyle={styles.actionButtonContent}
+                >
+                  Trigger Async Crash
+                </Button>
+                <Text variant="bodySmall" style={[styles.helper, { color: theme.colors.onSurfaceVariant }]}>
+                  Creates an unhandled promise rejection so you can verify async failure handling and reporting.
+                </Text>
+              </View>
+            </Card.Content>
+          </Card>
+        </List.Section>
+
+      </ScrollView>
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
+  screenRoot: {
+    flex: 1,
+    paddingHorizontal: 0,
   },
-  title: {
-    fontSize: 22,
-    fontWeight: '600',
-    color: colors.textPrimary,
-    marginBottom: spacing.sm,
+  scroll: {
+    flex: 1,
   },
-  body: {
-    fontSize: 15,
-    color: colors.textSecondary,
-    lineHeight: 22,
+  scrollContent: {
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.xl,
+    paddingTop: spacing.sm,
+  },
+  header: {
     marginBottom: spacing.lg,
+    gap: spacing.xs,
   },
-  actions: {
-    gap: spacing.sm,
-  },
-  button: {
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-    borderRadius: 10,
-    backgroundColor: `${colors.tint}18`,
-    borderWidth: 1,
-    borderColor: `${colors.tint}55`,
-  },
-  buttonPressed: {
-    opacity: 0.9,
-  },
-  buttonLabel: {
-    fontSize: 16,
+  headerTitle: {
     fontWeight: '600',
-    color: colors.tint,
-    textAlign: 'center',
   },
-  sectionLabel: {
-    marginTop: spacing.xl,
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-    marginBottom: spacing.xs,
+  section: {
+    marginBottom: 0,
+    paddingHorizontal: 0,
   },
-  sectionHint: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    lineHeight: 20,
+  subheader: {
+    marginTop: spacing.sm,
     marginBottom: spacing.sm,
+    paddingHorizontal: 0,
+    fontSize: 13,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
-  dangerActions: {
+  sectionIntro: {
+    marginBottom: spacing.md,
+    lineHeight: 20,
+  },
+  card: {
+    borderRadius: 12,
+  },
+  divider: {
+    marginVertical: spacing.md,
+  },
+  diagnosticsContent: {
+    paddingVertical: spacing.sm,
+    gap: spacing.md,
+  },
+  diagnosticBlock: {
     gap: spacing.sm,
   },
-  dangerButton: {
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
+  actionButton: {
     borderRadius: 10,
-    backgroundColor: '#fef2f2',
-    borderWidth: 1,
-    borderColor: '#fecaca',
   },
-  dangerButtonPressed: {
-    opacity: 0.92,
+  actionButtonContent: {
+    paddingVertical: spacing.xs,
   },
-  dangerButtonLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#b91c1c',
-    textAlign: 'center',
+  helper: {
+    lineHeight: 20,
   },
 });

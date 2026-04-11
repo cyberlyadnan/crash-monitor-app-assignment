@@ -5,35 +5,39 @@ import { NavigationContainer } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { Pressable, StyleSheet, Text } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { PaperProvider } from 'react-native-paper';
 
 import { AppNavigator } from '@/navigation';
 import { colors, spacing } from '@/constants';
+import { paperTheme } from '@/theme/paperTheme';
 
 function App() {
   return (
     <SafeAreaProvider>
-      <Sentry.ErrorBoundary
-        fallback={({ error, resetError }) => (
-          <SafeAreaView style={styles.fallbackRoot} edges={['top', 'bottom', 'left', 'right']}>
-            <Text style={styles.fallbackTitle}>Something went wrong</Text>
-            <Text style={styles.fallbackMessage}>{String(error)}</Text>
-            <Pressable
-              onPress={resetError}
-              style={({ pressed }) => [
-                styles.retryButton,
-                pressed ? styles.retryButtonPressed : undefined,
-              ]}
-            >
-              <Text style={styles.retryLabel}>Try again</Text>
-            </Pressable>
-          </SafeAreaView>
-        )}
-      >
-        <NavigationContainer>
-          <StatusBar style="dark" />
-          <AppNavigator />
-        </NavigationContainer>
-      </Sentry.ErrorBoundary>
+      <PaperProvider theme={paperTheme}>
+        <Sentry.ErrorBoundary
+          fallback={({ error, resetError }) => (
+            <SafeAreaView style={styles.fallbackRoot} edges={['top', 'bottom', 'left', 'right']}>
+              <Text style={styles.fallbackTitle}>Something went wrong</Text>
+              <Text style={styles.fallbackMessage}>{String(error)}</Text>
+              <Pressable
+                onPress={resetError}
+                style={({ pressed }) => [
+                  styles.retryButton,
+                  pressed ? styles.retryButtonPressed : undefined,
+                ]}
+              >
+                <Text style={styles.retryLabel}>Try again</Text>
+              </Pressable>
+            </SafeAreaView>
+          )}
+        >
+          <NavigationContainer>
+            <StatusBar style="dark" />
+            <AppNavigator />
+          </NavigationContainer>
+        </Sentry.ErrorBoundary>
+      </PaperProvider>
     </SafeAreaProvider>
   );
 }

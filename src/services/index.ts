@@ -4,3 +4,4 @@
  */
 
 export { createHttpClient } from './http';
+export { initSentry, PLACEHOLDER_SENTRY_DSN, Sentry } from './sentry';

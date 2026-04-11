@@ -19,7 +19,10 @@ function App() {
             <Text style={styles.fallbackMessage}>{String(error)}</Text>
             <Pressable
               onPress={resetError}
-              style={({ pressed }) => [styles.retryButton, pressed && styles.retryButtonPressed]}
+              style={({ pressed }) => [
+                styles.retryButton,
+                pressed ? styles.retryButtonPressed : undefined,
+              ]}
             >
               <Text style={styles.retryLabel}>Try again</Text>
             </Pressable>
@@ -70,4 +73,9 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Sentry.wrap(App);
+/**
+ * Avoid `Sentry.wrap` in Expo Go: it injects TouchEventBoundary + root profiler and can trigger
+ * Fabric bridge errors (`expected dynamic type 'boolean', but had type 'string'`) on iOS.
+ * Revisit `Sentry.wrap(App)` for EAS/release builds after upgrading `@sentry/react-native` if desired.
+ */
+export default App;

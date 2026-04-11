@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/react-native';
+import Constants from 'expo-constants';
 
 /**
  * Replace with your project DSN from Sentry (Settings → Client Keys).
@@ -9,6 +10,10 @@ export const PLACEHOLDER_SENTRY_DSN =
 
 function resolveDsn(): string {
   return process.env.EXPO_PUBLIC_SENTRY_DSN ?? PLACEHOLDER_SENTRY_DSN;
+}
+
+function isExpoGo(): boolean {
+  return Constants.appOwnership === 'expo';
 }
 
 let initialized = false;
@@ -23,12 +28,27 @@ export function initSentry(): void {
   }
   initialized = true;
 
+  const expoGo = isExpoGo();
+
   Sentry.init({
     dsn: resolveDsn(),
     debug: __DEV__,
     environment: __DEV__ ? 'development' : 'production',
     enableAutoSessionTracking: true,
-    tracesSampleRate: __DEV__ ? 1.0 : 0.2,
+    /**
+     * Expo Go + New Architecture: leave performance tracing off so we do not register
+     * tracing integrations that assume a full native Sentry client (see terminal: bridge type mismatches).
+     * EAS / dev builds use `appOwnership !== 'expo'` and get normal sampling below.
+     */
+    ...(expoGo
+      ? {
+          enableAutoPerformanceTracing: false,
+          enableAppStartTracking: false,
+          enableStallTracking: false,
+        }
+      : {
+          tracesSampleRate: __DEV__ ? 1.0 : 0.2,
+        }),
   });
 }
 

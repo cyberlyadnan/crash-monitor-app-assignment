@@ -1,4 +1,5 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Platform } from 'react-native';
 
 import { FlatListScreen } from '../screens/FlatListScreen';
 import { LegendListScreen } from '../screens/LegendListScreen';
@@ -21,8 +22,20 @@ export function AppNavigator() {
     <Stack.Navigator
       initialRouteName="FlatListScreen"
       screenOptions={{
+        headerShown: true,
+        headerTransparent: false,
         headerShadowVisible: true,
         headerTitleStyle: { fontWeight: '600' },
+        headerStyle: {
+          backgroundColor: '#ffffff',
+        },
+        contentStyle: {
+          flex: 1,
+          backgroundColor: '#f3f4f6',
+        },
+        ...(Platform.OS === 'android'
+          ? { statusBarTranslucent: false, statusBarBackgroundColor: '#ffffff' }
+          : null),
       }}
     >
       <Stack.Screen

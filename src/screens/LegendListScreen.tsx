@@ -1,8 +1,9 @@
 import { LegendList } from '@legendapp/list';
 import { useCallback, useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 
 import { ListItemRow } from '../components/ListItemRow';
+import { ScreenSafeArea } from '../components/ScreenSafeArea';
 import { buildFlatListData, type ListRowModel } from '../constants/listData';
 import type { RootStackScreenProps } from '../types/navigation';
 
@@ -35,22 +36,27 @@ export function LegendListScreen(_props: Props) {
   const keyExtractor = useCallback((item: ListRowModel) => item.id, []);
 
   return (
-    <View style={styles.container}>
-      <LegendList
-        style={styles.list}
-        data={data}
-        renderItem={renderItem}
-        keyExtractor={keyExtractor}
-        estimatedItemSize={56}
-        recycleItems
-        drawDistance={250}
-      />
-      <View style={styles.hint}>
-        <Text style={styles.hintText}>
-          Legend List: see file comments for performance notes vs FlatList.
-        </Text>
+    <ScreenSafeArea>
+      <View style={styles.container}>
+        <LegendList
+          style={styles.list}
+          data={data}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          contentInsetAdjustmentBehavior={
+            Platform.OS === 'ios' ? 'automatic' : 'never'
+          }
+          estimatedItemSize={56}
+          recycleItems
+          drawDistance={250}
+        />
+        <View style={styles.hint}>
+          <Text style={styles.hintText}>
+            Legend List: see file comments for performance notes vs FlatList.
+          </Text>
+        </View>
       </View>
-    </View>
+    </ScreenSafeArea>
   );
 }
 

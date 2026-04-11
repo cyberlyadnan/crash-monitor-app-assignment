@@ -1,6 +1,8 @@
+import { useHeaderHeight } from '@react-navigation/elements';
 import { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
+  KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
@@ -10,6 +12,7 @@ import {
   View,
 } from 'react-native';
 
+import { ScreenSafeArea } from '../components/ScreenSafeArea';
 import {
   cancelAllScheduledNotifications,
   cancelScheduledNotification,
@@ -32,6 +35,7 @@ import type { RootStackScreenProps } from '../types/navigation';
 type Props = RootStackScreenProps<'SettingsScreen'>;
 
 export function SettingsScreen(_props: Props) {
+  const headerHeight = useHeaderHeight();
   const [notificationsAllowed, setNotificationsAllowed] = useState(false);
   const [repeatingScheduleId, setRepeatingScheduleId] = useState<string | null>(null);
   const [scheduledCount, setScheduledCount] = useState(0);
@@ -142,13 +146,19 @@ export function SettingsScreen(_props: Props) {
   const nativeNotifications = isNotificationSupported();
 
   return (
-    <ScrollView
-      style={styles.scroll}
-      contentContainerStyle={styles.scrollContent}
-      keyboardShouldPersistTaps="handled"
-    >
-      <View style={styles.screen}>
-        <View style={styles.section}>
+    <ScreenSafeArea>
+      <KeyboardAvoidingView
+        style={styles.keyboard}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? headerHeight : 0}
+      >
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.screen}>
+            <View style={styles.section}>
           <Text style={styles.sectionHeading}>Local notifications</Text>
           {!nativeNotifications ? (
             <View style={styles.card}>
@@ -254,9 +264,9 @@ export function SettingsScreen(_props: Props) {
               </View>
             </>
           )}
-        </View>
+            </View>
 
-        <View style={styles.section}>
+            <View style={styles.section}>
           <Text style={styles.sectionHeading}>Diagnostics</Text>
           <View style={styles.card}>
             <Pressable
@@ -274,14 +284,19 @@ export function SettingsScreen(_props: Props) {
             >
               <Text style={styles.buttonLabel}>Trigger Async Crash</Text>
             </Pressable>
+            </View>
+            </View>
           </View>
-        </View>
-      </View>
-    </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </ScreenSafeArea>
   );
 }
 
 const styles = StyleSheet.create({
+  keyboard: {
+    flex: 1,
+  },
   scroll: {
     flex: 1,
     backgroundColor: '#f3f4f6',

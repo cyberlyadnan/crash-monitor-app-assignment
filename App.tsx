@@ -2,7 +2,7 @@ import './src/lib/notificationsSetup';
 
 import { NavigationContainer } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -15,7 +15,11 @@ export default function App() {
         <NavigationContainer>
           <AppNavigator />
         </NavigationContainer>
-        <StatusBar style="dark" />
+        <StatusBar
+          style="dark"
+          backgroundColor="#ffffff"
+          translucent={Platform.OS === 'android' ? false : undefined}
+        />
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

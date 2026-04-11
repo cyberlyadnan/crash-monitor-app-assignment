@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import type { SectionListRenderItem } from 'react-native';
 import { useCallback, useMemo } from 'react';
-import { SectionList, StyleSheet, Text, View } from 'react-native';
+import { Platform, SectionList, StyleSheet, Text, View } from 'react-native';
 
 import { ListItemRow } from '../components/ListItemRow';
+import { ScreenSafeArea } from '../components/ScreenSafeArea';
 import {
   buildSectionListData,
   type ListRowModel,
@@ -34,20 +35,25 @@ export function SectionListScreen(_props: Props) {
   const keyExtractor = useCallback((item: ListRowModel) => item.id, []);
 
   return (
-    <View style={styles.container}>
-      <SectionList<ListRowModel, ListSection>
-        sections={sections}
-        renderItem={renderItem}
-        renderSectionHeader={renderSectionHeader}
-        keyExtractor={keyExtractor}
-        stickySectionHeadersEnabled
-        initialNumToRender={12}
-        maxToRenderPerBatch={20}
-        windowSize={9}
-        removeClippedSubviews
-        showsVerticalScrollIndicator={false}
-      />
-    </View>
+    <ScreenSafeArea>
+      <View style={styles.container}>
+        <SectionList<ListRowModel, ListSection>
+          sections={sections}
+          renderItem={renderItem}
+          renderSectionHeader={renderSectionHeader}
+          keyExtractor={keyExtractor}
+          contentInsetAdjustmentBehavior={
+            Platform.OS === 'ios' ? 'automatic' : 'never'
+          }
+          stickySectionHeadersEnabled
+          initialNumToRender={12}
+          maxToRenderPerBatch={20}
+          windowSize={9}
+          removeClippedSubviews
+          showsVerticalScrollIndicator={false}
+        />
+      </View>
+    </ScreenSafeArea>
   );
 }
 

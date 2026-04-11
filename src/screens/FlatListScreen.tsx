@@ -1,8 +1,9 @@
 import type { ListRenderItem } from 'react-native';
 import { useCallback, useMemo } from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { FlatList, Platform, StyleSheet, View } from 'react-native';
 
 import { ListItemRow } from '../components/ListItemRow';
+import { ScreenSafeArea } from '../components/ScreenSafeArea';
 import { buildFlatListData, type ListRowModel } from '../constants/listData';
 import type { RootStackScreenProps } from '../types/navigation';
 
@@ -31,20 +32,25 @@ export function FlatListScreen(_props: Props) {
   );
 
   return (
-    <View style={styles.container}>
-      <FlatList
-        data={data}
-        renderItem={renderItem}
-        keyExtractor={keyExtractor}
-        getItemLayout={getItemLayout}
-        initialNumToRender={16}
-        maxToRenderPerBatch={24}
-        windowSize={7}
-        removeClippedSubviews
-        updateCellsBatchingPeriod={50}
-        showsVerticalScrollIndicator={false}
-      />
-    </View>
+    <ScreenSafeArea>
+      <View style={styles.container}>
+        <FlatList
+          data={data}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          getItemLayout={getItemLayout}
+          contentInsetAdjustmentBehavior={
+            Platform.OS === 'ios' ? 'automatic' : 'never'
+          }
+          initialNumToRender={16}
+          maxToRenderPerBatch={24}
+          windowSize={7}
+          removeClippedSubviews
+          updateCellsBatchingPeriod={50}
+          showsVerticalScrollIndicator={false}
+        />
+      </View>
+    </ScreenSafeArea>
   );
 }
 

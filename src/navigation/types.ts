@@ -1,16 +1,19 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-export type RootStackParamList = {
-  Home: undefined;
+export type AppStackParamList = {
+  FlatListScreen: undefined;
+  SectionListScreen: undefined;
+  LegendListScreen: undefined;
+  SettingsScreen: undefined;
 };
 
-export type RootStackScreenProps<Screen extends keyof RootStackParamList> = NativeStackScreenProps<
-  RootStackParamList,
+export type AppStackScreenProps<Screen extends keyof AppStackParamList> = NativeStackScreenProps<
+  AppStackParamList,
   Screen
 >;
 
 declare global {
   namespace ReactNavigation {
-    interface RootParamList extends RootStackParamList {}
+    interface RootParamList extends AppStackParamList {}
   }
 }

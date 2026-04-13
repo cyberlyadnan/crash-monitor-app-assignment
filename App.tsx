@@ -9,8 +9,31 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AppNavigator } from './src/navigation/AppNavigator';
 import { runInitialNotificationPermissionPrompt } from './src/lib/localNotifications';
+import * as Sentry from '@sentry/react-native';
 
-export default function App() {
+Sentry.init({
+  dsn: 'https://70244323f4ca51474eaa2cebd691a0cb@o4511205554061312.ingest.de.sentry.io/4511205556879440',
+
+  // Adds more context data to events (IP address, cookies, user, etc.)
+  // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
+  sendDefaultPii: true,
+
+  // Enable Logs
+  enableLogs: true,
+  tracesSampleRate: 1.0,
+  profilesSampleRate: 1.0,
+  debug: __DEV__,
+
+  // Configure Session Replay
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1,
+  integrations: [Sentry.mobileReplayIntegration(), Sentry.feedbackIntegration()],
+
+  // uncomment the line below to enable Spotlight (https://spotlightjs.com)
+  // spotlight: __DEV__,
+});
+
+export default Sentry.wrap(function App() {
   useEffect(() => {
     if (Platform.OS === 'web') return;
     const t = setTimeout(() => {
@@ -33,7 +56,7 @@ export default function App() {
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
-}
+});
 
 const styles = StyleSheet.create({
   root: {

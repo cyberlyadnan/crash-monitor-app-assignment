@@ -26,10 +26,6 @@ import {
   setNotificationSwitchStored,
   showLocalNotificationIfAllowed,
 } from '../lib/localNotifications';
-import {
-  triggerAsyncCrashPlaceholder,
-  triggerSyncCrashPlaceholder,
-} from '../lib/crashHandlers';
 import type { RootStackScreenProps } from '../types/navigation';
 
 type Props = RootStackScreenProps<'SettingsScreen'>;
@@ -119,14 +115,6 @@ export function SettingsScreen(_props: Props) {
       await syncNotificationSwitch();
     }
   }, [notificationsAllowed, syncNotificationSwitch]);
-
-  const onSyncCrash = useCallback(() => {
-    triggerSyncCrashPlaceholder();
-  }, []);
-
-  const onAsyncCrash = useCallback(() => {
-    void triggerAsyncCrashPlaceholder();
-  }, []);
 
   const nativeNotifications = isNotificationSupported();
 
@@ -227,26 +215,6 @@ export function SettingsScreen(_props: Props) {
               )}
             </View>
 
-            <View style={styles.section}>
-              <Text style={styles.sectionHeading}>Diagnostics</Text>
-              <View style={styles.card}>
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={onSyncCrash}
-                  style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-                >
-                  <Text style={styles.buttonLabel}>Trigger Crash</Text>
-                </Pressable>
-                <View style={styles.divider} />
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={onAsyncCrash}
-                  style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-                >
-                  <Text style={styles.buttonLabel}>Trigger Async Crash</Text>
-                </Pressable>
-              </View>
-            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -376,18 +344,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#6b7280',
   },
-  button: {
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-  },
   buttonPressed: {
     backgroundColor: '#f9fafb',
-  },
-  buttonLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#b91c1c',
   },
   divider: {
     height: StyleSheet.hairlineWidth,

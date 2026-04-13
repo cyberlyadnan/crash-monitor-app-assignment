@@ -12,6 +12,11 @@ const NAV_TARGETS: {
   accessibilityLabel: string;
 }[] = [
   {
+    name: 'HomeScreen',
+    icon: 'home-outline',
+    accessibilityLabel: 'Go to home',
+  },
+  {
     name: 'FlatListScreen',
     icon: 'list-outline',
     accessibilityLabel: 'Go to FlatList demo',
@@ -25,6 +30,16 @@ const NAV_TARGETS: {
     name: 'LegendListScreen',
     icon: 'flash-outline',
     accessibilityLabel: 'Go to Legend List demo',
+  },
+  {
+    name: 'CrashSyncScreen',
+    icon: 'warning-outline',
+    accessibilityLabel: 'Open sync crash screen',
+  },
+  {
+    name: 'CrashAsyncScreen',
+    icon: 'timer-outline',
+    accessibilityLabel: 'Open async crash screen',
   },
   {
     name: 'SettingsScreen',

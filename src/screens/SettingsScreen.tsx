@@ -30,7 +30,7 @@ import type { RootStackScreenProps } from '../types/navigation';
 
 type Props = RootStackScreenProps<'SettingsScreen'>;
 
-export function SettingsScreen(_props: Props) {
+export function SettingsScreen({ navigation }: Props) {
   const headerHeight = useHeaderHeight();
   const [notificationsAllowed, setNotificationsAllowed] = useState(false);
   const [hydrated, setHydrated] = useState(false);
@@ -213,6 +213,21 @@ export function SettingsScreen(_props: Props) {
                   </View>
                 </>
               )}
+            </View>
+            <View style={styles.section}>
+              <Text style={styles.sectionHeading}>Monitoring</Text>
+              <View style={styles.card}>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => navigation.navigate('SentryMonitorScreen')}
+                  style={({ pressed }) => [styles.openSettingsRow, pressed && styles.buttonPressed]}
+                >
+                  <Text style={styles.openSettingsLabel}>Open Sentry Monitor</Text>
+                  <Text style={styles.openSettingsHint}>
+                    View unresolved issues, recent errors, and refresh data from Sentry APIs.
+                  </Text>
+                </Pressable>
+              </View>
             </View>
 
           </View>

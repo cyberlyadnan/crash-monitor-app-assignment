@@ -5,7 +5,9 @@ import { CrashAsyncScreen } from '../screens/CrashAsyncScreen';
 import { CrashSyncScreen } from '../screens/CrashSyncScreen';
 import { FlatListScreen } from '../screens/FlatListScreen';
 import { HomeScreen } from '../screens/HomeScreen';
+import { SentryIssueDetailScreen } from '../screens/SentryIssueDetailScreen';
 import { LegendListScreen } from '../screens/LegendListScreen';
+import { SentryMonitorScreen } from '../screens/SentryMonitorScreen';
 import { SectionListScreen } from '../screens/SectionListScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import type { RootStackParamList } from '../types/navigation';
@@ -20,6 +22,8 @@ const SCREEN_TITLES: Record<keyof RootStackParamList, string> = {
   LegendListScreen: 'Legend List',
   CrashSyncScreen: 'Crash Screen 1',
   CrashAsyncScreen: 'Crash Screen 2',
+  SentryMonitorScreen: 'Sentry Monitor',
+  SentryIssueDetailScreen: 'Issue Details',
   SettingsScreen: 'Settings',
 };
 
@@ -99,6 +103,26 @@ export function AppNavigator() {
         component={CrashAsyncScreen}
         options={({ navigation, route }) => ({
           title: SCREEN_TITLES.CrashAsyncScreen,
+          headerRight: () => (
+            <ScreenHeaderNav navigation={navigation} current={route.name} />
+          ),
+        })}
+      />
+      <Stack.Screen
+        name="SentryMonitorScreen"
+        component={SentryMonitorScreen}
+        options={({ navigation, route }) => ({
+          title: SCREEN_TITLES.SentryMonitorScreen,
+          headerRight: () => (
+            <ScreenHeaderNav navigation={navigation} current={route.name} />
+          ),
+        })}
+      />
+      <Stack.Screen
+        name="SentryIssueDetailScreen"
+        component={SentryIssueDetailScreen}
+        options={({ navigation, route }) => ({
+          title: SCREEN_TITLES.SentryIssueDetailScreen,
           headerRight: () => (
             <ScreenHeaderNav navigation={navigation} current={route.name} />
           ),

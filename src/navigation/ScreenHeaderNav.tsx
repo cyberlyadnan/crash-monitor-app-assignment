@@ -5,9 +5,12 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import type { RootStackParamList } from '../types/navigation';
 
 type RouteKey = keyof RootStackParamList;
+type HeaderRouteKey = {
+  [K in RouteKey]: RootStackParamList[K] extends undefined ? K : never;
+}[RouteKey];
 
 const NAV_TARGETS: {
-  name: RouteKey;
+  name: HeaderRouteKey;
   icon: keyof typeof Ionicons.glyphMap;
   accessibilityLabel: string;
 }[] = [
@@ -40,6 +43,11 @@ const NAV_TARGETS: {
     name: 'CrashAsyncScreen',
     icon: 'timer-outline',
     accessibilityLabel: 'Open async crash screen',
+  },
+  {
+    name: 'SentryMonitorScreen',
+    icon: 'analytics-outline',
+    accessibilityLabel: 'Open Sentry monitor screen',
   },
   {
     name: 'SettingsScreen',

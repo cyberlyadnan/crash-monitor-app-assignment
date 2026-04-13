@@ -7,6 +7,8 @@ export type RootStackParamList = {
   LegendListScreen: undefined;
   CrashSyncScreen: undefined;
   CrashAsyncScreen: undefined;
+  SentryMonitorScreen: undefined;
+  SentryIssueDetailScreen: { issueId: string };
   SettingsScreen: undefined;
 };
 

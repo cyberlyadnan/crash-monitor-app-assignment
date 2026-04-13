@@ -15,6 +15,7 @@ type HomeAction = {
     | 'LegendListScreen'
     | 'CrashSyncScreen'
     | 'CrashAsyncScreen'
+    | 'SentryMonitorScreen'
     | 'SettingsScreen';
 };
 
@@ -24,6 +25,7 @@ const ACTIONS: HomeAction[] = [
   { label: 'LegendList Demo', hint: 'Open legend list screen', route: 'LegendListScreen' },
   { label: 'Crash Screen 1', hint: 'Trigger sync crash test', route: 'CrashSyncScreen' },
   { label: 'Crash Screen 2', hint: 'Trigger async crash test', route: 'CrashAsyncScreen' },
+  { label: 'Sentry Monitor', hint: 'View live Sentry issues and errors', route: 'SentryMonitorScreen' },
   { label: 'Settings', hint: 'Notification and app settings', route: 'SettingsScreen' },
 ];
 

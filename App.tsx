@@ -18,11 +18,11 @@ Sentry.init({
   // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
   sendDefaultPii: true,
 
-  // Enable Logs
-  enableLogs: true,
+  // Keep app event capture enabled, but avoid noisy native SDK debug output in development.
+  enableLogs: false,
   tracesSampleRate: 1.0,
   profilesSampleRate: 1.0,
-  debug: __DEV__,
+  debug: false,
 
   // Configure Session Replay
   replaysSessionSampleRate: 0.1,

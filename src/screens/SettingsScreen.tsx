@@ -15,6 +15,12 @@ import {
 
 import { ScreenSafeArea } from '../components/ScreenSafeArea';
 import {
+  getSelectedAppIcon,
+  isAppIconSwitchSupported,
+  setSelectedAppIcon,
+  type AppIconKey,
+} from '../lib/appIcon';
+import {
   cancelAllScheduledNotifications,
   deriveNotificationSwitchOn,
   ensureAndroidNotificationChannel,
@@ -35,6 +41,9 @@ export function SettingsScreen({ navigation }: Props) {
   const [notificationsAllowed, setNotificationsAllowed] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [notificationInitError, setNotificationInitError] = useState<string | null>(null);
+  const [selectedIcon, setSelectedIcon] = useState<AppIconKey>('default');
+  const [iconLoading, setIconLoading] = useState(true);
+  const [iconError, setIconError] = useState<string | null>(null);
 
   const syncNotificationSwitch = useCallback(async () => {
     const [osGranted, stored] = await Promise.all([getPermissionGranted(), getNotificationSwitchStored()]);
@@ -64,6 +73,38 @@ export function SettingsScreen({ navigation }: Props) {
         cancelled = true;
       };
     }, [syncNotificationSwitch]),
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      void (async () => {
+        setIconError(null);
+        if (!isAppIconSwitchSupported()) {
+          if (!cancelled) {
+            setIconLoading(false);
+          }
+          return;
+        }
+        try {
+          const current = await getSelectedAppIcon();
+          if (!cancelled) {
+            setSelectedIcon(current);
+          }
+        } catch (e) {
+          if (!cancelled) {
+            setIconError(e instanceof Error ? e.message : 'Failed to load selected icon.');
+          }
+        } finally {
+          if (!cancelled) {
+            setIconLoading(false);
+          }
+        }
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }, []),
   );
 
   const onToggleNotifications = useCallback(
@@ -117,6 +158,19 @@ export function SettingsScreen({ navigation }: Props) {
   }, [notificationsAllowed, syncNotificationSwitch]);
 
   const nativeNotifications = isNotificationSupported();
+  const appIconSupported = isAppIconSwitchSupported();
+
+  const onSelectIcon = useCallback(async (icon: AppIconKey) => {
+    if (!appIconSupported) return;
+    setIconError(null);
+    try {
+      const next = await setSelectedAppIcon(icon);
+      setSelectedIcon(next);
+      Alert.alert('Icon updated', 'Launcher icon will reflect this selection on next app launch.');
+    } catch (e) {
+      setIconError(e instanceof Error ? e.message : 'Failed to switch app icon.');
+    }
+  }, [appIconSupported]);
 
   return (
     <ScreenSafeArea>
@@ -131,6 +185,58 @@ export function SettingsScreen({ navigation }: Props) {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.screen}>
+            <View style={styles.section}>
+              <Text style={styles.sectionHeading}>App Icon</Text>
+              {!appIconSupported ? (
+                <View style={styles.card}>
+                  <Text style={styles.webNote}>
+                    App icon switching is available on Android native builds only.
+                  </Text>
+                </View>
+              ) : (
+                <>
+                  <Text style={styles.explainer}>
+                    Pick a launcher icon. Your choice is saved and applied automatically on the next app
+                    launch.
+                  </Text>
+                  {iconError ? (
+                    <View style={styles.errorBanner}>
+                      <Text style={styles.errorText}>{iconError}</Text>
+                    </View>
+                  ) : null}
+                  <View style={styles.card}>
+                    {(['default', 'blue', 'green'] as const).map((icon, idx) => (
+                      <View key={icon}>
+                        <Pressable
+                          accessibilityRole="button"
+                          onPress={() => void onSelectIcon(icon)}
+                          disabled={iconLoading}
+                          style={({ pressed }) => [
+                            styles.iconOptionRow,
+                            selectedIcon === icon && styles.iconOptionRowActive,
+                            pressed && styles.buttonPressed,
+                            iconLoading && styles.actionDisabled,
+                          ]}
+                        >
+                          <Text style={styles.iconOptionTitle}>
+                            {icon === 'default'
+                              ? 'Default Icon'
+                              : icon === 'blue'
+                                ? 'Blue Icon'
+                                : 'Green Icon'}
+                          </Text>
+                          <Text style={styles.iconOptionSub}>
+                            {selectedIcon === icon ? 'Selected' : 'Tap to set as launcher icon'}
+                          </Text>
+                        </Pressable>
+                        {idx < 2 ? <View style={styles.divider} /> : null}
+                      </View>
+                    ))}
+                  </View>
+                </>
+              )}
+            </View>
+
             <View style={styles.section}>
               <Text style={styles.sectionHeading}>Notifications</Text>
               {!nativeNotifications ? (
@@ -356,6 +462,24 @@ const styles = StyleSheet.create({
   },
   actionHint: {
     marginTop: 6,
+    fontSize: 13,
+    color: '#6b7280',
+  },
+  iconOptionRow: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    backgroundColor: '#fff',
+  },
+  iconOptionRowActive: {
+    backgroundColor: '#eff6ff',
+  },
+  iconOptionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1f2937',
+  },
+  iconOptionSub: {
+    marginTop: 4,
     fontSize: 13,
     color: '#6b7280',
   },

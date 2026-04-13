@@ -49,6 +49,10 @@ export function LegendListScreen(_props: Props) {
           estimatedItemSize={56}
           recycleItems
           drawDistance={250}
+          onEndReached={() => {
+            console.log('Load more...');
+          }}
+    
         />
         <View style={styles.hint}>
           <Text style={styles.hintText}>

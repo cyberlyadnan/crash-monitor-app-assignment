@@ -1,23 +1,79 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
-import { Platform } from 'react-native';
+import { Linking, PermissionsAndroid, Platform } from 'react-native';
 
-const ANDROID_CHANNEL_ID = 'demo-local-notifications';
-
-/** iOS requires ≥60s interval when `repeats` is true. */
-export const REPEATING_INTERVAL_SECONDS = 60;
+/** New id when channel importance changes — Android ignores importance updates on an existing channel. */
+const ANDROID_CHANNEL_ID = 'foreground-message-alerts';
 
 export async function ensureAndroidNotificationChannel(): Promise<void> {
   if (Platform.OS !== 'android') return;
   await Notifications.setNotificationChannelAsync(ANDROID_CHANNEL_ID, {
-    name: 'Demo alerts',
-    description: 'Sample local notifications from Settings',
-    importance: Notifications.AndroidImportance.HIGH,
+    name: 'Message alerts',
+    description: 'High-priority local notifications while the app is open or in background',
+    importance: Notifications.AndroidImportance.MAX,
     vibrationPattern: [0, 250, 250, 250],
+    enableVibrate: true,
+    sound: 'default',
+    showBadge: true,
   });
+}
+
+function withHeadsUpPresentation(
+  content: Notifications.NotificationContentInput,
+): Notifications.NotificationContentInput {
+  if (Platform.OS === 'android') {
+    return {
+      ...content,
+      priority: Notifications.AndroidNotificationPriority.MAX,
+    };
+  }
+  if (Platform.OS === 'ios') {
+    return {
+      ...content,
+      interruptionLevel: 'active',
+    };
+  }
+  return content;
 }
 
 export function isNotificationSupported(): boolean {
   return Platform.OS !== 'web';
+}
+
+const NOTIFICATION_PROMPT_DONE_KEY = '@crash_monitor/notif_prompt_done_v1';
+
+/** User toggle in Settings: `'0'` = off in app (even if OS still allows), `'1'` = on, `null` = unset (follow OS). */
+const SETTINGS_NOTIFICATION_SWITCH_KEY = '@crash_monitor/settings_notif_switch_v1';
+
+export async function getNotificationSwitchStored(): Promise<string | null> {
+  return AsyncStorage.getItem(SETTINGS_NOTIFICATION_SWITCH_KEY);
+}
+
+export async function setNotificationSwitchStored(on: boolean): Promise<void> {
+  await AsyncStorage.setItem(SETTINGS_NOTIFICATION_SWITCH_KEY, on ? '1' : '0');
+}
+
+/**
+ * Switch UI: off if user chose off in app; otherwise follows OS permission.
+ */
+export function deriveNotificationSwitchOn(osGranted: boolean, stored: string | null): boolean {
+  if (stored === '0') return false;
+  if (stored === '1') return osGranted;
+  return osGranted;
+}
+
+export async function getNotificationsEffectiveEnabled(): Promise<boolean> {
+  const [osGranted, stored] = await Promise.all([
+    getPermissionGranted(),
+    getNotificationSwitchStored(),
+  ]);
+  return deriveNotificationSwitchOn(osGranted, stored);
+}
+
+function getAndroidApiLevel(): number {
+  if (Platform.OS !== 'android') return 0;
+  const v = Platform.Version;
+  return typeof v === 'number' ? v : parseInt(String(v), 10);
 }
 
 export async function getPermissionGranted(): Promise<boolean> {
@@ -28,54 +84,74 @@ export async function getPermissionGranted(): Promise<boolean> {
 export async function requestNotificationPermission(): Promise<boolean> {
   const existing = await Notifications.getPermissionsAsync();
   if (existing.status === 'granted') return true;
-  const next = await Notifications.requestPermissionsAsync();
+
+  if (Platform.OS === 'android' && getAndroidApiLevel() >= 33) {
+    const result = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+    );
+    const rnGranted = result === PermissionsAndroid.RESULTS.GRANTED;
+    const after = await Notifications.getPermissionsAsync();
+    return rnGranted || after.status === 'granted';
+  }
+
+  const next = await Notifications.requestPermissionsAsync({
+    ios: { allowAlert: true, allowBadge: true, allowSound: true },
+    android: {},
+  });
   return next.status === 'granted';
 }
 
-export async function scheduleTestNotificationNow(): Promise<void> {
+export async function runInitialNotificationPermissionPrompt(): Promise<void> {
+  if (Platform.OS === 'web') return;
+  try {
+    const done = await AsyncStorage.getItem(NOTIFICATION_PROMPT_DONE_KEY);
+    if (done === '1') return;
+
+    const { status } = await Notifications.getPermissionsAsync();
+    if (status === 'granted') {
+      await AsyncStorage.setItem(NOTIFICATION_PROMPT_DONE_KEY, '1');
+      return;
+    }
+
+    await requestNotificationPermission();
+    await AsyncStorage.setItem(NOTIFICATION_PROMPT_DONE_KEY, '1');
+  } catch {
+    await AsyncStorage.setItem(NOTIFICATION_PROMPT_DONE_KEY, '1');
+  }
+}
+
+export async function openAppNotificationSettings(): Promise<void> {
+  await Linking.openSettings();
+}
+
+/**
+ * Presents one local notification as soon as the OS allows (after permission + channel).
+ * Call only when `getPermissionGranted()` is true — or use `showLocalNotificationIfAllowed`.
+ */
+export async function showLocalNotificationNow(): Promise<void> {
+  const trigger: Notifications.NotificationTriggerInput =
+    Platform.OS === 'android' ? { channelId: ANDROID_CHANNEL_ID } : null;
+
   await Notifications.scheduleNotificationAsync({
-    content: {
+    content: withHeadsUpPresentation({
       title: 'Local notification',
-      body:
-        'This fired immediately. Use Start / Pause below to control repeating reminders.',
+      body: 'You enabled notifications and tapped the button — this fires immediately.',
       sound: true,
-    },
-    trigger: null,
+    }),
+    trigger,
   });
 }
 
-export async function scheduleRepeatingDemo(): Promise<string> {
-  return Notifications.scheduleNotificationAsync({
-    content: {
-      title: 'Repeating demo',
-      body: `Fires every ${REPEATING_INTERVAL_SECONDS}s while active. Pause stops the series.`,
-      sound: true,
-    },
-    trigger: {
-      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-      seconds: REPEATING_INTERVAL_SECONDS,
-      repeats: true,
-      ...(Platform.OS === 'android' ? { channelId: ANDROID_CHANNEL_ID } : {}),
-    },
-  });
-}
-
-export async function cancelScheduledNotification(id: string): Promise<void> {
-  await Notifications.cancelScheduledNotificationAsync(id);
+/** Respects Settings switch + OS permission (user can turn off in app without revoking OS permission). */
+export async function showLocalNotificationIfAllowed(): Promise<{ ok: true } | { ok: false; reason: 'denied' }> {
+  const effective = await getNotificationsEffectiveEnabled();
+  if (!effective) {
+    return { ok: false, reason: 'denied' };
+  }
+  await showLocalNotificationNow();
+  return { ok: true };
 }
 
 export async function cancelAllScheduledNotifications(): Promise<void> {
   await Notifications.cancelAllScheduledNotificationsAsync();
-}
-
-export async function countScheduledNotifications(): Promise<number> {
-  const pending = await Notifications.getAllScheduledNotificationsAsync();
-  return pending.length;
-}
-
-/** Restores UI state after reload: finds our repeating demo schedule if it still exists. */
-export async function findRepeatingDemoScheduleId(): Promise<string | null> {
-  const pending = await Notifications.getAllScheduledNotificationsAsync();
-  const match = pending.find((r) => r.content.title === 'Repeating demo');
-  return match?.identifier ?? null;
 }
